@@ -6,6 +6,8 @@
 
 > ⏳ **무료 서버라 첫 접속이 느릴 수 있어요.** Render 무료 서버는 15분 동안 요청이 없으면 잠들고, 다음 첫 요청에 깨어나는 데 1분 가까이 걸립니다. 고장이 아닙니다.
 
+- **배포 주소: https://bridgecamp-level1-backend.onrender.com** (연결 확인: [/health](https://bridgecamp-level1-backend.onrender.com/health))
+- 프론트엔드 주소: https://bridgecamp-level1-frontend.vercel.app
 - 기획서: [기획서.md](./기획서.md)
 - 프론트엔드 저장소: [bridgecamp-level1-frontend](https://github.com/kimdo127-cloud/bridgecamp-level1-frontend)
 
