@@ -19,6 +19,17 @@ export interface CohortValues {
   schedule: string;
 }
 
+// 대표 사진: 화면에서 줄인 JPG·PNG·WEBP data URL만 받는다 (약 1MB 이하)
+const THUMBNAIL = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const MAX_THUMBNAIL_LENGTH = 1_400_000;
+
+export function validateThumbnail(v: unknown): { error: string | null; value: string | null } {
+  if (v === null || v === undefined || v === '') return { error: null, value: null };
+  if (typeof v !== 'string' || !THUMBNAIL.test(v)) return { error: '사진은 JPG, PNG, WEBP 파일만 올릴 수 있어요.', value: null };
+  if (v.length > MAX_THUMBNAIL_LENGTH) return { error: '사진 용량이 너무 커요. 더 작은 사진을 골라 주세요.', value: null };
+  return { error: null, value: v };
+}
+
 export interface CourseValues {
   title: string;
   category: string;
@@ -33,6 +44,7 @@ export interface CourseValues {
   recommendedFor: string;
   curriculum: string;
   preparation: string;
+  thumbnail: string | null;
   cohorts: CohortValues[];
 }
 
@@ -138,6 +150,8 @@ export function validateCourse(body: unknown): { errors: FieldErrors; value: Cou
   else if (steps.length > 26) errors.curriculum = '커리큘럼은 26줄까지 적을 수 있어요.';
 
   if (v.preparation.length > 300) errors.preparation = '준비 사항은 300자 이내로 적어 주세요.';
+  const thumbnail = validateThumbnail(b.thumbnail);
+  if (thumbnail.error) errors.thumbnail = thumbnail.error;
   set('description', checkLength(v.description, 10, 1000, '과정 소개를 입력해 주세요.', '과정 소개를 10자 이상, 1000자 이내로 적어 주세요.'));
 
   const rawCohorts = Array.isArray(b.cohorts) ? b.cohorts : [];
@@ -156,6 +170,7 @@ export function validateCourse(body: unknown): { errors: FieldErrors; value: Cou
       curriculum: steps.join('\n'),
       price: Number(v.price),
       defaultCapacity: Number(v.defaultCapacity),
+      thumbnail: thumbnail.value,
       cohorts,
     },
   };

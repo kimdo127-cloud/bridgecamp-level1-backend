@@ -1,4 +1,4 @@
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { CoursesService } from './courses.service.js';
 
 function parseId(id: string) {
@@ -24,6 +24,11 @@ export class CoursesController {
   @Post()
   create(@Body() body: unknown) {
     return this.courses.create(body);
+  }
+
+  @Patch(':id/thumbnail')
+  updateThumbnail(@Param('id') id: string, @Body() body: unknown) {
+    return this.courses.updateThumbnail(parseId(id), body);
   }
 
   @Post(':id/cohorts')

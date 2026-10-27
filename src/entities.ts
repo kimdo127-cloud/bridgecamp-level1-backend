@@ -47,6 +47,10 @@ export class Course {
   @Column({ type: 'text', default: '' })
   preparation: string;
 
+  // 대표 사진. 화면에서 줄인 이미지를 data URL(base64)로 저장한다. 없으면 분야 그림을 보여 준다
+  @Column({ type: 'text', nullable: true })
+  thumbnail: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Cohort, Course } from './entities.js';
-import { validateCohort, validateCourse, type FieldErrors } from './validation.js';
+import { validateCohort, validateCourse, validateThumbnail, type FieldErrors } from './validation.js';
 
 function rejectIfInvalid(errors: FieldErrors) {
   if (Object.keys(errors).length > 0) {
@@ -46,6 +46,15 @@ export class CoursesService {
       await tx.getRepository(Cohort).save(cohorts.map((c, i) => tx.getRepository(Cohort).create({ ...c, courseId: course.id, cohortNo: i + 1 })));
       return course.id;
     });
+    return this.get(id);
+  }
+
+  // 대표 사진 바꾸기. null을 보내면 사진을 빼고 분야 그림으로 돌아간다
+  async updateThumbnail(id: number, body: unknown) {
+    await this.get(id);
+    const { error, value } = validateThumbnail((body as { thumbnail?: unknown } | null)?.thumbnail);
+    rejectIfInvalid(error ? { thumbnail: error } : {});
+    await this.db.getRepository(Course).update(id, { thumbnail: value });
     return this.get(id);
   }
 
