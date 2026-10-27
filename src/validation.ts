@@ -105,7 +105,8 @@ export function validateCohort(body: unknown): { errors: FieldErrors; value: Coh
   return { errors, value: { startDate, endDate, capacity: Number(capacity), schedule } };
 }
 
-export function validateCourse(body: unknown): { errors: FieldErrors; value: CourseValues } {
+// 과정 등록은 첫 기수가 함께 필요하고, 과정 수정은 기수 없이 과정 정보만 검사한다
+export function validateCourse(body: unknown, { withCohorts = true } = {}): { errors: FieldErrors; value: CourseValues } {
   const b = (body ?? {}) as Record<string, unknown>;
   const v = {
     title: str(b.title),
@@ -154,8 +155,8 @@ export function validateCourse(body: unknown): { errors: FieldErrors; value: Cou
   if (thumbnail.error) errors.thumbnail = thumbnail.error;
   set('description', checkLength(v.description, 10, 1000, '과정 소개를 입력해 주세요.', '과정 소개를 10자 이상, 1000자 이내로 적어 주세요.'));
 
-  const rawCohorts = Array.isArray(b.cohorts) ? b.cohorts : [];
-  if (rawCohorts.length === 0) errors.cohorts = '기수를 하나 이상 추가해 주세요.';
+  const rawCohorts = withCohorts && Array.isArray(b.cohorts) ? b.cohorts : [];
+  if (withCohorts && rawCohorts.length === 0) errors.cohorts = '기수를 하나 이상 추가해 주세요.';
   const cohorts = rawCohorts.map((c, i) => {
     const r = validateCohort(c);
     for (const [field, message] of Object.entries(r.errors)) errors[`cohorts.${i}.${field}`] = message;

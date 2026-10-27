@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Cohort, Course } from './entities.js';
-import { validateCohort, validateCourse, validateThumbnail, type FieldErrors } from './validation.js';
+import { todayKST, validateCohort, validateCourse, type FieldErrors } from './validation.js';
 
 function rejectIfInvalid(errors: FieldErrors) {
   if (Object.keys(errors).length > 0) {
@@ -49,13 +49,29 @@ export class CoursesService {
     return this.get(id);
   }
 
-  // 대표 사진 바꾸기. null을 보내면 사진을 빼고 분야 그림으로 돌아간다
-  async updateThumbnail(id: number, body: unknown) {
+  // 과정 정보 수정 (대표 사진 포함). 기수는 따로 수정한다
+  async update(id: number, body: unknown) {
     await this.get(id);
-    const { error, value } = validateThumbnail((body as { thumbnail?: unknown } | null)?.thumbnail);
-    rejectIfInvalid(error ? { thumbnail: error } : {});
-    await this.db.getRepository(Course).update(id, { thumbnail: value });
+    const { errors, value } = validateCourse(body, { withCohorts: false });
+    rejectIfInvalid(errors);
+    const { cohorts: _cohorts, ...courseValues } = value;
+    await this.db.getRepository(Course).update(id, courseValues);
     return this.get(id);
+  }
+
+  // 기수 수정. 이미 시작했거나 끝난 기수는 수강생이 있을 수 있어 고치지 않는다
+  async updateCohort(courseId: number, cohortId: number, body: unknown) {
+    const repo = this.db.getRepository(Cohort);
+    const cohort = await repo.findOneBy({ id: cohortId, courseId });
+    if (!cohort) throw new NotFoundException({ message: '찾는 기수가 없어요.' });
+    if (cohort.startDate <= todayKST()) {
+      throw new BadRequestException({ message: '이미 시작한 기수는 수정할 수 없어요.', errors: {} });
+    }
+    const { errors, value } = validateCohort(body);
+    rejectIfInvalid(errors);
+    await repo.update(cohortId, value);
+    const { course: _course, ...rest } = (await repo.findOneByOrFail({ id: cohortId }));
+    return rest;
   }
 
   // 기수 번호는 그 과정의 마지막 기수 + 1로 자동으로 붙는다

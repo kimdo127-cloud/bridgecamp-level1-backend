@@ -26,9 +26,14 @@ export class CoursesController {
     return this.courses.create(body);
   }
 
-  @Patch(':id/thumbnail')
-  updateThumbnail(@Param('id') id: string, @Body() body: unknown) {
-    return this.courses.updateThumbnail(parseId(id), body);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: unknown) {
+    return this.courses.update(parseId(id), body);
+  }
+
+  @Patch(':id/cohorts/:cohortId')
+  updateCohort(@Param('id') id: string, @Param('cohortId') cohortId: string, @Body() body: unknown) {
+    return this.courses.updateCohort(parseId(id), parseId(cohortId), body);
   }
 
   @Post(':id/cohorts')
